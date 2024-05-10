@@ -54,23 +54,23 @@ function updateTodo(id, updatedTodo, callback) {
 }
 
 //Function to Delete the todo
-// function deleteTodo(id, callback) {
-//   readTodos((err, todos) => {
-//     if (err) {
-//       callback(err);
-//       return;
-//     }
+function deleteTodo(id, callback) {
+  readTodos((err, todos) => {
+    if (err) {
+      callback(err);
+      return;
+    }
 
-//     const index = todos.findIndex((todo) => todo.id === id);
-//     if (index === -1) {
-//       callback(new Error("Todo not found"));
-//       return;
-//     }
+    const index = todos.findIndex((todo) => todo.id === id);
+    if (index === -1) {
+      callback(new Error("Todo not found"));
+      return;
+    }
 
-//     const deletedTodo = todos.splice(index, 1);
-//     addTodos(todos, deletedTodo);
-//   });
-// }
+    const deletedTodo = todos.splice(index, 1);
+    addTodos(todos, deletedTodo);
+  });
+}
 
 //fetch todos from JSON file and show all todos
 app.get("/todos", (req, res) => {
@@ -147,17 +147,18 @@ app.put("/todos/:id", (req, res) => {
 });
 
 //DELETE route to delete todo
-// app.delete("/todos/:id", (req, res) => {
-//   const id = parseInt(req.params.id);
+app.delete("/todos/:id", (req, res) => {
+  const id = parseInt(req.params.id);
 
-//   deleteTodo(id, (err) => {
-//     if (err) {
-//       res.status(500).send("Error in deleting todo");
-//       return;
-//     }
-//   });
-//   res.json("Todo deleted successfully ");
-// });
+  deleteTodo(id, (err) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send("Error in deleting todo");
+      return;
+    }
+    res.json("Todo deleted successfully ");
+  });
+});
 
 app.listen(port, () => {
   console.log(`Server is listening to port: ${port}`);
