@@ -54,21 +54,33 @@ function updateTodo(id, updatedTodo, callback) {
 }
 
 //Function to Delete the todo
-function deleteTodo(id, callback) {
+function deleteTodo(todoId, callback) {
   readTodos((err, todos) => {
     if (err) {
       callback(err);
       return;
     }
 
-    const index = todos.findIndex((todo) => todo.id === id);
+    const index = todos.findIndex((todo) => todo.id === todoId);
     if (index === -1) {
-      callback(new Error("Todo not found"));
+      callback(null, false);
       return;
     }
 
     const deletedTodo = todos.splice(index, 1);
-    addTodos(todos, deletedTodo);
+    // console.log(deletedTodo)
+    if(!deletedTodo){
+      callback(err, false);
+    } else{
+      callback(null, true);
+    }
+
+    addTodos(todos, (err) => {
+      if (err) {
+        callback(err, false); // Indicate failure in writing todos
+        return;
+      }
+    });
   });
 }
 
@@ -117,6 +129,7 @@ app.post("/todos", (req, res) => {
     const newTodo = req.body;
     // New ID
     newTodo.id = todos.length + 1;
+    // console.log(newTodo.id);
 
     todos.push(newTodo);
 
@@ -146,17 +159,23 @@ app.put("/todos/:id", (req, res) => {
   });
 });
 
-//DELETE route to delete todo
+// DELETE route to delete todo
 app.delete("/todos/:id", (req, res) => {
-  const id = parseInt(req.params.id);
+  const todoId = parseInt(req.params.id);
 
-  deleteTodo(id, (err) => {
+  // console.log(todoId);
+
+  deleteTodo(todoId, (err, deletedTodo) => {
     if (err) {
-      console.log(err);
-      res.status(500).send("Error in deleting todo");
+      console.error(err);
+      res.status(500).send("Error deleting todo");
       return;
     }
-    res.json("Todo deleted successfully ");
+    if (deletedTodo) {
+      res.json({ success: true, message: "Todo deleted successfully" });
+    } else {
+      res.status(404).json({ success: false, error: "Todo not found" });
+    }
   });
 });
 
