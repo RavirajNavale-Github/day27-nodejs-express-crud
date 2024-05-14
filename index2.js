@@ -1,10 +1,11 @@
 const express = require("express");
 const todos = require("./todos.json");
+const fs = require("fs");
 
 const app = express();
 
 //Activate Middleware
-// app.use(express.urlencoded({extended: false}));
+app.use(express.json());
 
 //get all todos
 app.get("/todos", (req, res) => {
@@ -28,19 +29,47 @@ app
       res.json(todo);
     }
   })
-  .put((req, res) => {})
-  .delete((req, res) => {});
+  .put((req, res) => {
+    const id = parseInt(req.params.id);
+    const updatedTodo = req.body;
+    // console.log(updatedTodo);
+
+    const index = todos.findIndex((todo) => id === todo.id);
+
+    if(index === -1){
+      res.status(404).send("Todo not found");
+      return;
+    }else{
+      todos[index] = {...todos[index], ...updatedTodo};
+      res.send("Todo updated successfully :)");
+    }
+  })
+  .delete((req, res) => {
+      const id = parseInt(req.params.id);
+      const index = todos.findIndex((todo) => id === todo.id);
+    
+      if(index === -1){
+        res.status(404).send("Todo not found");
+        return;
+      }else{
+        todos.splice(index, 1);
+        res.send("Todo deleted successfully :)");
+      }
+  });
 
 //Create new user
 app.post("/todos", (req, res) => {
-  const newTodo = req.body;
-  console.log(newTodo);
-
-  newTodo.id = todos.length + 1;
-
-  todos.push(newTodo);
-
-  res.send(todos)
+  try {
+    const body = req.body;
+    console.log(body);
+    todos.push({
+      id: todos.length + 1,
+      ...body
+    });
+    res.send("Todo created successfully :)");
+  } catch {
+    return res.status(500).send("Error in posting todo");
+  }
 });
 
 app.listen(3000, () => {
